@@ -17,22 +17,52 @@ commands:
           command: |
             aws cloudformation delete-stack --stack-name myStack-${CIRCLE_WORKFLOW_ID:0:5}
 jobs:
-   
-   create_infrastructure: 
-     docker:
-       - image: amazon/aws-cli
-     steps:
-       - checkout
-       - run:
-           name: Create Cloudformation Stack
-           command: |
-             aws cloudformation deploy \
-               --template-file template.yml \
-               --stack-name myStack-${CIRCLE_WORKFLOW_ID:0:5} \
-               --region us-east-1
+# Exercise: Config and Deployment
+  configure_infrastructure: 
+    docker:
+      - image: python:3.7-alpine3.11
+    steps:
+      - checkout
+      - add_ssh_keys:
+              # You can get this ID in the section where you registered the SSH Key
+              fingerprints: ["36:47:43:c3:80:b4:0d:16:c6:b4:25:a1:d0:0f:9f:7d"] 
+      - run:
+          name: Install Ansible
+          command: |
+            # Install Ansible
+      - run:
+          name: Run Playbook and Configure server
+          command: |
+            apk add --update ansible
+      - run:
+          name: Configure server
+          command: |
+            ansible-playbook -i inventory main.yml
+  # Exercise: Smoke Testing
+ # smoke_test:
+ #   docker:
+ #     - image: alpine:latest
+ #   steps:
+ #     - run:
+ #         name: Test job
+ #         # Fail the job intentionally to simulate an error.
+ #         command:  return 1
+ #     - destroy_environment  
+  # create_infrastructure: 
+  #   docker:
+  #     - image: amazon/aws-cli
+  #   steps:
+  #     - checkout
+  #     - run:
+  #         name: Create Cloudformation Stack
+  #         command: |
+  #           aws cloudformation deploy \
+  #             --template-file template.yml \
+  #             --stack-name myStack-${CIRCLE_WORKFLOW_ID:0:5} \
+  #             --region us-east-1
 # Sequential workflow
 workflows:
   # Name the workflow
   myWorkflow:
     jobs:
-      - create_infrastructure
+      - configure_infrastructure
